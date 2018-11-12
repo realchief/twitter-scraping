@@ -50,24 +50,12 @@ class TwitterSpider(scrapy.Spider):
         yield Request(url=self.start_urls[0], callback=self.parse_search_page)
 
     def parse_search_page(self, response):
-        # keyword = 'missbruk'
         excel_path = os.path.dirname(os.path.abspath(__file__)).replace('twitter_scraping/spiders', 'KeyWords for Depression.xlsx')
         df = pd.read_excel(excel_path)
         keywords = []
 
-        # english_keyword = df['Related search words proposal']
-        # for keyword in english_keyword:
-        #     nan_value = False
-        #     try:
-        #         if math.isnan(keyword):
-        #             nan_value = True
-        #     except:
-        #         pass
-        #     if not nan_value:
-        #         keywords.append(keyword.encode('utf-8'))
-
-        swedish_keyword = df['Swedish ']
-        for keyword in swedish_keyword:
+        english_keyword = df['Related search words proposal']
+        for keyword in english_keyword:
             nan_value = False
             try:
                 if math.isnan(keyword):
@@ -76,28 +64,6 @@ class TwitterSpider(scrapy.Spider):
                 pass
             if not nan_value:
                 keywords.append(keyword.encode('utf-8'))
-        #
-        # danish_keyword = df['Danish ']
-        # for keyword in danish_keyword:
-        #     nan_value = False
-        #     try:
-        #         if math.isnan(keyword):
-        #             nan_value = True
-        #     except:
-        #         pass
-        #     if not nan_value:
-        #         keywords.append(keyword.encode('utf-8'))
-        #
-        # norwegian_keyword = df['Norwegian']
-        # for keyword in norwegian_keyword:
-        #     nan_value = False
-        #     try:
-        #         if math.isnan(keyword):
-        #             nan_value = True
-        #     except:
-        #         pass
-        #     if not nan_value:
-        #         keywords.append(keyword.encode('utf-8'))
 
         for keyword in keywords:
             search_url = self.search_url.format(keyword=self._clean_text(keyword))
@@ -109,10 +75,6 @@ class TwitterSpider(scrapy.Spider):
                 headers=self.headers,
                 meta=meta
             )
-        # meta = response.meta
-        # meta['keyword'] = keyword
-        # search_url = self.search_url.format(keyword=keyword)
-        # yield Request(url=search_url, callback=self.parse_twitter_page, headers=self.headers, meta=meta)
 
     def parse_twitter_page(self, response):
         meta = response.meta
