@@ -84,7 +84,7 @@ class SwedishTwitterSpider(scrapy.Spider):
             min_position = re.search('data-min-position="(.*?)"', data)
             if min_position:
                 min_position = min_position.group(1)
-            next_page = self.next_page_url.format \
+            next_page = self.next_page_url.format\
                 (keyword=keyword,
                  max_position=min_position.replace('cm+', 'cm%2B').replace('==', '%3D%3D')
                  )
@@ -97,13 +97,28 @@ class SwedishTwitterSpider(scrapy.Spider):
                 if post_year < int(current_year) - 2:
                     next_page = None
                     break
-                author = self._clean_text(
-                    html.fromstring(post).xpath('//span[@class="FullNameGroup"]/strong/text()')[0])
-                content = self._clean_text(' '.join(html.fromstring(post)
-                                                    .xpath('//p[contains(@class, "TweetTextSize")]/text()'))).encode(
-                    'utf-8')
+                author = self._clean_text(html.fromstring(post).xpath('//span[@class="FullNameGroup"]/strong/text()')[0])
+                content = html.tostring(html.fromstring(post).xpath('//p[contains(@class, "TweetTextSize")]')[0])
+                p_tag = re.search('<p(.*?)>', html.tostring(html.fromstring(post).xpath('//p[contains(@class, "TweetTextSize")]')[0]))
+                if p_tag:
+                    p_tag = p_tag.group(1)
+                    content = content.replace(p_tag, '')
 
-                replies_count = html.fromstring(post) \
+                a_tag = re.findall('<a(.*?)>', html.tostring(html.fromstring(post).xpath('//p[contains(@class, "TweetTextSize")]')[0]))
+                if a_tag:
+                    for tag in a_tag:
+                        content = content.replace(tag, '')
+
+                span_tag = re.findall('<span(.*?)>', html.tostring(html.fromstring(post).xpath('//p[contains(@class, "TweetTextSize")]')[0]))
+                if span_tag:
+                    for tag in span_tag:
+                        content = content.replace(tag, '')
+
+                content = content.replace('<strong>', '').replace('</strong>', '')\
+                    .replace('<p>', '').replace('</p>', '').replace('<a>', '')\
+                    .replace('</a>', '').replace('<span>', '').replace('</span>', '')
+
+                replies_count = html.fromstring(post)\
                     .xpath('//div[contains(@class, "ProfileTweet-action--reply")]//'
                            'span[@class="ProfileTweet-actionCountForPresentation"]/text()')
                 if len(replies_count) > 0:
@@ -111,7 +126,7 @@ class SwedishTwitterSpider(scrapy.Spider):
                 else:
                     replies_count = 0
 
-                retweet_count = html.fromstring(post) \
+                retweet_count = html.fromstring(post)\
                     .xpath('//div[contains(@class, "ProfileTweet-action--retweet")]//'
                            'span[@class="ProfileTweet-actionCountForPresentation"]/text()')
                 if len(retweet_count) > 0:
@@ -119,7 +134,7 @@ class SwedishTwitterSpider(scrapy.Spider):
                 else:
                     retweet_count = 0
 
-                like_count = html.fromstring(post) \
+                like_count = html.fromstring(post)\
                     .xpath('//div[contains(@class, "ProfileTweet-action--favorite")]//'
                            'span[@class="ProfileTweet-actionCountForPresentation"]/text()')
                 if len(like_count) > 0:
@@ -141,7 +156,7 @@ class SwedishTwitterSpider(scrapy.Spider):
                 author_link = urljoin(response.url, html.fromstring(post)
                                       .xpath('//div[@class="stream-item-header"]/a/@href')[0])
                 if author_link:
-                    yield Request(
+                     yield Request(
                         url=author_link,
                         callback=self.parse_author,
                         meta=meta,
@@ -166,31 +181,46 @@ class SwedishTwitterSpider(scrapy.Spider):
                 if post_year < int(current_year) - 2:
                     next_page = None
                     break
-                author = self._clean_text(
-                    html.fromstring(str_data).xpath('//span[@class="FullNameGroup"]/strong/text()')[0])
-                content = self._clean_text(
-                    ' '.join(html.fromstring(str_data).xpath('//p[contains(@class, "TweetTextSize")]/text()'))).encode(
-                    'utf-8')
+                author = self._clean_text(html.fromstring(str_data).xpath('//span[@class="FullNameGroup"]/strong/text()')[0])
+                content = html.tostring(html.fromstring(str_data).xpath('//p[contains(@class, "TweetTextSize")]')[0])
+                p_tag = re.search('<p(.*?)>', html.tostring(
+                    html.fromstring(str_data).xpath('//p[contains(@class, "TweetTextSize")]')[0]))
+                if p_tag:
+                    p_tag = p_tag.group(1)
+                    content = content.replace(p_tag, '')
 
-                replies_count = html.fromstring(str_data).xpath(
-                    '//div[contains(@class, "ProfileTweet-action--reply")]//'
-                    'span[@class="ProfileTweet-actionCountForPresentation"]/text()')
+                a_tag = re.findall('<a(.*?)>', html.tostring(
+                    html.fromstring(str_data).xpath('//p[contains(@class, "TweetTextSize")]')[0]))
+                if a_tag:
+                    for tag in a_tag:
+                        content = content.replace(tag, '')
+
+                span_tag = re.findall('<span(.*?)>', html.tostring(
+                    html.fromstring(str_data).xpath('//p[contains(@class, "TweetTextSize")]')[0]))
+                if span_tag:
+                    for tag in span_tag:
+                        content = content.replace(tag, '')
+
+                content = content.replace('<strong>', '').replace('</strong>', '') \
+                    .replace('<p>', '').replace('</p>', '').replace('<a>', '') \
+                    .replace('</a>', '').replace('<span>', '').replace('</span>', '')
+
+                replies_count = html.fromstring(str_data).xpath('//div[contains(@class, "ProfileTweet-action--reply")]//'
+                           'span[@class="ProfileTweet-actionCountForPresentation"]/text()')
                 if len(replies_count) > 0:
                     replies_count = int(replies_count[0])
                 else:
                     replies_count = 0
 
-                retweet_count = html.fromstring(str_data).xpath(
-                    '//div[contains(@class, "ProfileTweet-action--retweet")]//'
-                    'span[@class="ProfileTweet-actionCountForPresentation"]/text()')
+                retweet_count = html.fromstring(str_data).xpath('//div[contains(@class, "ProfileTweet-action--retweet")]//'
+                           'span[@class="ProfileTweet-actionCountForPresentation"]/text()')
                 if len(retweet_count) > 0:
                     retweet_count = int(retweet_count[0])
                 else:
                     retweet_count = 0
 
-                like_count = html.fromstring(str_data).xpath(
-                    '//div[contains(@class, "ProfileTweet-action--favorite")]//'
-                    'span[@class="ProfileTweet-actionCountForPresentation"]/text()')
+                like_count = html.fromstring(str_data).xpath('//div[contains(@class, "ProfileTweet-action--favorite")]//'
+                           'span[@class="ProfileTweet-actionCountForPresentation"]/text()')
                 if len(like_count) > 0:
                     like_count = int(like_count[0])
                 else:
@@ -207,10 +237,9 @@ class SwedishTwitterSpider(scrapy.Spider):
                 meta = response.meta
                 meta['twitter'] = twitter
 
-                author_link = urljoin(response.url,
-                                      html.fromstring(str_data).xpath('//div[@class="stream-item-header"]/a/@href')[0])
+                author_link = urljoin(response.url, html.fromstring(str_data).xpath('//div[@class="stream-item-header"]/a/@href')[0])
                 if author_link:
-                    yield Request(
+                     yield Request(
                         url=author_link,
                         callback=self.parse_author,
                         meta=meta,

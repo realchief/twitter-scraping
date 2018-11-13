@@ -111,8 +111,25 @@ class TwitterSpider(scrapy.Spider):
                     next_page = None
                     break
                 author = self._clean_text(html.fromstring(post).xpath('//span[@class="FullNameGroup"]/strong/text()')[0])
-                content = self._clean_text(' '.join(html.fromstring(post)
-                                                    .xpath('//p[contains(@class, "TweetTextSize")]/text()'))).encode('utf-8')
+                content = html.tostring(html.fromstring(post).xpath('//p[contains(@class, "TweetTextSize")]')[0])
+                p_tag = re.search('<p(.*?)>', html.tostring(html.fromstring(post).xpath('//p[contains(@class, "TweetTextSize")]')[0]))
+                if p_tag:
+                    p_tag = p_tag.group(1)
+                    content = content.replace(p_tag, '')
+
+                a_tag = re.findall('<a(.*?)>', html.tostring(html.fromstring(post).xpath('//p[contains(@class, "TweetTextSize")]')[0]))
+                if a_tag:
+                    for tag in a_tag:
+                        content = content.replace(tag, '')
+
+                span_tag = re.findall('<span(.*?)>', html.tostring(html.fromstring(post).xpath('//p[contains(@class, "TweetTextSize")]')[0]))
+                if span_tag:
+                    for tag in span_tag:
+                        content = content.replace(tag, '')
+
+                content = content.replace('<strong>', '').replace('</strong>', '')\
+                    .replace('<p>', '').replace('</p>', '').replace('<a>', '')\
+                    .replace('</a>', '').replace('<span>', '').replace('</span>', '')
 
                 replies_count = html.fromstring(post)\
                     .xpath('//div[contains(@class, "ProfileTweet-action--reply")]//'
@@ -178,7 +195,28 @@ class TwitterSpider(scrapy.Spider):
                     next_page = None
                     break
                 author = self._clean_text(html.fromstring(str_data).xpath('//span[@class="FullNameGroup"]/strong/text()')[0])
-                content = self._clean_text(' '.join(html.fromstring(str_data).xpath('//p[contains(@class, "TweetTextSize")]/text()'))).encode('utf-8')
+                content = html.tostring(html.fromstring(str_data).xpath('//p[contains(@class, "TweetTextSize")]')[0])
+                p_tag = re.search('<p(.*?)>', html.tostring(
+                    html.fromstring(str_data).xpath('//p[contains(@class, "TweetTextSize")]')[0]))
+                if p_tag:
+                    p_tag = p_tag.group(1)
+                    content = content.replace(p_tag, '')
+
+                a_tag = re.findall('<a(.*?)>', html.tostring(
+                    html.fromstring(str_data).xpath('//p[contains(@class, "TweetTextSize")]')[0]))
+                if a_tag:
+                    for tag in a_tag:
+                        content = content.replace(tag, '')
+
+                span_tag = re.findall('<span(.*?)>', html.tostring(
+                    html.fromstring(str_data).xpath('//p[contains(@class, "TweetTextSize")]')[0]))
+                if span_tag:
+                    for tag in span_tag:
+                        content = content.replace(tag, '')
+
+                content = content.replace('<strong>', '').replace('</strong>', '') \
+                    .replace('<p>', '').replace('</p>', '').replace('<a>', '') \
+                    .replace('</a>', '').replace('<span>', '').replace('</span>', '')
 
                 replies_count = html.fromstring(str_data).xpath('//div[contains(@class, "ProfileTweet-action--reply")]//'
                            'span[@class="ProfileTweet-actionCountForPresentation"]/text()')
