@@ -1,4 +1,4 @@
-# Twitter Scraper Instllation Guide
+# Twitter Scraper Installation Guide
 
 ## Retrieve code
 
